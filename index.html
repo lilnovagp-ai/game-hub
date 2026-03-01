@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Hub</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0d0d12;
+    color: white;
+    overflow-x: hidden;
+    text-align: center;
+}
+
+/* Animated Background */
+.background {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(-45deg, #0f0f14, #141420, #1a1a2e, #101018);
+    background-size: 400% 400%;
+    animation: gradientMove 12s ease infinite;
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+header {
+    padding: 20px;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.live-counter {
+    font-size: 14px;
+    color: #00ff99;
+}
+
+/* Search */
+.search-box {
+    margin: 20px auto;
+    background: white;
+    border-radius: 50px;
+    width: 80%;
+    max-width: 500px;
+    display: flex;
+    overflow: hidden;
+}
+
+.search-box input {
+    flex: 1;
+    border: none;
+    padding: 15px;
+    font-size: 16px;
+    outline: none;
+}
+
+.search-box button {
+    width: 60px;
+    border: none;
+    background: black;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Buttons */
+.game-btn {
+    display: inline-block;
+    margin: 10px;
+    padding: 15px 30px;
+    background: #1e1e2a;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.game-btn:hover {
+    background: #2a2a3a;
+    transform: scale(1.05);
+}
+
+/* Game Canvas */
+#gameContainer {
+    margin-top: 30px;
+    display: none;
+}
+
+canvas {
+    background: black;
+    border-radius: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="background"></div>
+
+<header>
+🎮 Game Hub
+<div class="live-counter">
+👥 Players Online: <span id="playerCount">0</span>
+</div>
+</header>
+
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search games...">
+    <button onclick="searchGame()">🔍</button>
+</div>
+
+<div id="gameButtons">
+    <div class="game-btn" data-name="slope" onclick="startGame()">🎮 Slope Mini</div>
+</div>
+
+<div id="gameContainer">
+    <h2>🎮 Slope Mini</h2>
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
+</div>
+
+<script>
+/* Fake counter */
+let count = Math.floor(Math.random() * 400) + 600;
+function updateCounter() {
+    count += Math.floor(Math.random() * 3);
+    document.getElementById("playerCount").textContent = count;
+}
+updateCounter();
+setInterval(updateCounter, 3000);
+
+/* Search */
+function searchGame() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    let buttons = document.querySelectorAll(".game-btn");
+    buttons.forEach(btn => {
+        let name = btn.getAttribute("data-name");
+        btn.style.display = name.includes(input) ? "inline-block" : "none";
+    });
+}
+
+/* Mini Game */
+function startGame() {
+    document.getElementById("gameContainer").style.display = "block";
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let player = { x: 200, y: 450, size: 15 };
+    let obstacles = [];
+    let speed = 2;
+    let score = 0;
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") player.x -= 20;
+        if (e.key === "ArrowRight") player.x += 20;
+    });
+
+    function spawnObstacle() {
+        obstacles.push({
+            x: Math.random() * 380,
+            y: 0,
+            size: 20
+        });
+    }
+
+    function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Player
+        ctx.fillStyle = "lime";
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Obstacles
+        ctx.fillStyle = "red";
+        obstacles.forEach((obs, index) => {
+            obs.y += speed;
+            ctx.fillRect(obs.x, obs.y, obs.size, obs.size);
+
+            // Collision
+            if (
+                player.x < obs.x + obs.size &&
+                player.x > obs.x - obs.size &&
+                player.y < obs.y + obs.size &&
+                player.y > obs.y - obs.size
+            ) {
+                alert("Game Over! Score: " + score);
+                document.location.reload();
+            }
+
+            if (obs.y > 500) {
+                obstacles.splice(index, 1);
+                score++;
+            }
+        });
+
+        ctx.fillStyle = "white";
+        ctx.fillText("Score: " + score, 10, 20);
+
+        requestAnimationFrame(update);
+    }
+
+    setInterval(spawnObstacle, 1000);
+    update();
+}
+</script>
+
+</body>
+</html>
